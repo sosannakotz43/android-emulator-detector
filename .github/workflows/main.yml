@@ -1,0 +1,47 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Клонируем репозиторий
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Устанавливаем последнюю версию JDK 11
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      # 3. Обновляем Gradle до последней версии (например, 7.5)
+      - name: Upgrade Gradle wrapper
+        run: |
+          chmod +x gradlew
+          ./gradlew wrapper --gradle-version 7.5 --distribution-type all
+
+      # 4. Устанавливаем Android SDK
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 30
+          build-tools: 30.0.3
+
+      # 5. Сборка APK
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      # 6. Сохраняем APK как артефакт
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
